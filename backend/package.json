@@ -1,0 +1,8 @@
+{
+  "name": "chefia-backend",
+  "version": "1.0.0",
+  "description": "API do ChefIA - gerador de receitas com Google Gemini (sem dependências)",
+  "main": "server.js",
+  "scripts": { "start": "node server.js", "dev": "node --watch server.js", "demo": "MOCK_GEMINI=true node server.js", "test": "node test.js && node test-e2e.js" },
+  "engines": { "node": ">=18" }
+}

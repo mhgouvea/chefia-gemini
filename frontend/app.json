@@ -1,0 +1,2 @@
+{ "expo": { "name": "ChefIA", "slug": "chefia", "version": "1.0.0", "orientation": "portrait",
+  "platforms": ["web", "android", "ios"], "web": { "bundler": "metro" } } }

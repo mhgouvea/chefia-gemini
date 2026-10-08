@@ -1,0 +1,29 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ChefIA</title><style>
+body{font-family:system-ui,sans-serif;background:#fff8f0;margin:0;color:#222}main{max-width:640px;margin:auto;padding:16px}
+h1{color:#e8590c}.card{background:#fff;border:1px solid #f1dfcf;border-radius:14px;padding:16px;margin-bottom:14px}
+input,button{font:inherit;padding:10px;border-radius:10px;border:1px solid #ddd}button{background:#e8590c;color:#fff;border:0;font-weight:700;cursor:pointer}
+.chip{display:inline-block;border:1px solid #ccc;border-radius:20px;padding:5px 12px;margin:3px;cursor:pointer}.on{background:#e8590c;color:#fff;border-color:#e8590c}
+.err{background:#ffe3e3;color:#c92a2a;padding:12px;border-radius:10px;margin-bottom:14px}.warn{background:#fff3bf;padding:8px;border-radius:8px}label{font-weight:700;display:block;margin-top:12px}
+</style></head><body><main>
+<h1>🍳 ChefIA</h1><p>Interface web simples da API (a interface React Native está na pasta <code>frontend</code>).</p>
+<div class="card"><label>Ingredientes</label><input id="ing" placeholder="ex.: tomate (Enter para adicionar)"><div id="ings"></div>
+<label>Restrições</label><div id="rs"></div>
+<label>Porções <input id="srv" type="number" min="1" max="10" value="2" style="width:70px"> &nbsp; Máx. kcal <input id="cal" type="number" placeholder="opcional" style="width:110px"></label>
+<br><button id="go">Gerar receita</button></div>
+<div id="out"></div><h2>Histórico</h2><div id="hist"></div>
+<script>
+const R=['vegetariano','vegano','sem glúten','sem lactose','low carb'];let ings=[],rs=[];const $=i=>document.getElementById(i);
+function draw(){$('ings').innerHTML=ings.map(i=>`<span class="chip on" onclick="ings=ings.filter(x=>x!='${i}');draw()">${i} ✕</span>`).join('');
+$('rs').innerHTML=R.map(r=>`<span class="chip ${rs.includes(r)?'on':''}" onclick="rs=rs.includes('${r}')?rs.filter(x=>x!='${r}'):[...rs,'${r}'];draw()">${r}</span>`).join('')}
+$('ing').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim().toLowerCase();if(v&&!ings.includes(v))ings.push(v);e.target.value='';draw()}});
+const card=r=>`<div class="card"><h2>${r.title}</h2><p>${r.description}</p><p>⏱ ${r.prepTimeMinutes} min · 🔥 ${r.caloriesPerServing} kcal/porção · ${r.difficulty}</p>
+${r.warning?`<p class="warn">⚠️ ${r.warning}</p>`:''}<b>Ingredientes</b><ul>${r.ingredients.map(i=>`<li>${i.quantity} ${i.name}</li>`).join('')}</ul>
+<b>Preparo</b><ol>${r.steps.map(s=>`<li>${s}</li>`).join('')}</ol><p>💡 ${r.tips}</p></div>`;
+async function hist(){const h=await (await fetch('/api/recipes')).json();$('hist').innerHTML=h.map(x=>`<div class="card"><b>${x.recipe.title}</b> <small>(${x.input.ingredients.join(', ')})</small> <button onclick="del('${x.id}')">🗑</button></div>`).join('')}
+async function del(id){await fetch('/api/recipes/'+id,{method:'DELETE'});hist()}
+$('go').onclick=async()=>{$('out').innerHTML='Gerando...';const res=await fetch('/api/recipes',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({ingredients:ings,restrictions:rs,servings:+$('srv').value,maxCalories:$('cal').value?+$('cal').value:undefined})});const d=await res.json();
+$('out').innerHTML=res.ok?card(d.recipe):`<div class="err">${[d.error,...(d.details||[])].join('<br>• ')}</div>`;hist()};
+draw();hist();
+</script></main></body></html>
